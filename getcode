@@ -1,0 +1,51 @@
+#!/usr/bin/python
+
+import json
+import sys
+import requests
+
+
+APISERVER = "http://211.239.124.233:19108"
+if len(sys.argv) != 2:
+  print("USAGE: {} <contract_name>".format(sys.argv[0]))
+  exit()
+
+
+def getcode(contract):
+  url = APISERVER+"/v1/chain/get_abi"
+  what_contract = '{"account_name": "%s"}' % contract
+  reponse = requests.post(url, data=what_contract)
+  return reponse.json()['abi']
+
+def parse_abi(abi):
+  print("[+] version: {}".format(abi['version']))
+  structs = dict((k['name'], k) for k in abi['structs'])
+  tables  = dict((k['type'], k) for k in abi['tables'])
+  actions = dict((k['type'], k) for k in abi['actions'])
+
+  return structs, tables, actions
+
+
+if __name__ == "__main__":
+  contract = sys.argv[1]
+
+  abi = getcode(contract)
+  structs, tables, actions = parse_abi(abi)
+
+  print("[+] @actions")
+  for a in actions:
+    params = ", ".join(
+        ["{} {}".format(
+          f['type'], f['name']) for f in structs[a]['fields']
+        ])
+    print("[+] {}({})".format(a, params))
+
+  print("")
+  print("[+] @tables")
+  for a in tables:
+    params = " \n      ".join(
+        ["{:5} {:5}".format(
+          f['type'], f['name']) for f in structs[a]['fields']
+        ])
+    print("[+] {}(\n      {}\n     )".format(a, params))
+    

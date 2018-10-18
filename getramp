@@ -1,0 +1,35 @@
+#!/usr/bin/python3
+
+import os
+import requests
+
+API_SERVER_ADDR = os.getenv('APISERVER')
+
+def request_rammarket():
+  table_info = '{"table": "rammarket", "scope": "eosio", "code": "eosio", "json":"true"}'
+  ramapi_url = "{}/v1/chain/get_table_rows".format(API_SERVER_ADDR)
+
+  res = requests.post(ramapi_url, data=table_info)
+  ram_info = res.json()
+  #print(json.dumps(ram_info, indent=2))
+  return ram_info['rows'][0]
+
+def get_ram_price(raminfo, per=1024): #kbytes
+  quotbalance = raminfo["quote"]["balance"].split()[0]
+  basebalance = raminfo["base"]["balance"].split()[0]
+  print("#"*40)
+  print("{:<20} | {:<20}".format("QUOTE_B", "BASE_B"))
+  print("{:<20} | {:<20}".format(quotbalance, basebalance))
+  print("")
+  return float(quotbalance)/float(basebalance)*per
+
+def main():
+  raminfo = request_rammarket()
+  ramp = get_ram_price(raminfo)
+  print( "RAM PRICE : {}/kbytes".format(ramp) )
+  print( "  for 4Kbyte : {}".format(ramp*4) )
+  print( "  for 8Kbyte : {}".format(ramp*8) )
+  print("")
+
+if __name__=="__main__":
+  main()
