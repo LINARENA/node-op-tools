@@ -3,7 +3,7 @@
 import os
 import requests
 
-API_SERVER_ADDR = os.getenv('APISERVER')
+API_SERVER_ADDR = "http://api.oklinarenabp.link:8000"
 
 def request_rammarket():
   table_info = '{"table": "rammarket", "scope": "eosio", "code": "eosio", "json":"true"}'
