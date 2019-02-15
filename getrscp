@@ -1,0 +1,42 @@
+#!/usr/bin/python3
+
+import requests
+
+APISERVER = "http://api.oklinarenabp.link:8000"
+def get_resource_price(account_name):
+  url = APISERVER+ "/v1/chain/get_account"
+  data = '''{{"account_name":"{}"}}'''.format(account_name)
+
+  with requests.session() as s:
+    r = s.post(url, data=data).json()
+
+  cpuStaked = float((r['total_resources']['cpu_weight']).split()[0]) 
+  cpuAvailable = int(r['cpu_limit']['max'])/1000
+  cpuPrice = cpuStaked/cpuAvailable
+
+  netStaked = float((r['total_resources']['net_weight'].split()[0]))
+  netAvailable = int(r['net_limit']['max'])/1024
+  netPrice = netStaked/netAvailable
+
+  return {"cpuPrice_per_ms": cpuPrice, "netPrice_per_kbyte": netPrice}
+
+ACTION_CNT = 100
+CPU_US_PER_ACTION = 500
+NET_BYTE_PER_ACTION = 160
+
+AC = ACTION_CNT * CPU_US_PER_ACTION / 1000
+AN = ACTION_CNT * NET_BYTE_PER_ACTION / 1024
+
+if __name__ == "__main__":
+  prices = get_resource_price("hyrxvdkffqgk")
+  print("[*] Available Action Count: {}".format(ACTION_CNT))
+  print("[*] CPU Usage us Per Action: {}".format(CPU_US_PER_ACTION))
+  print("[*] NET Usage byte Per Action: {}\n".format(NET_BYTE_PER_ACTION))
+
+  print("CPU PRICE  : {} LIN/ms".format(prices["cpuPrice_per_ms"]))
+  print("  for {}ms : {:0.4f} LIN".format(AC, prices["cpuPrice_per_ms"]*AC))
+
+  print("NET PRICE  : {} LIN/byte".format(prices["netPrice_per_kbyte"]))
+  print("  for {}KB : {:0.4f} LIN".format(AN, prices["netPrice_per_kbyte"]*AN))
+  print("")
+
